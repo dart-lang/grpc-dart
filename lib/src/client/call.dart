@@ -224,7 +224,8 @@ class ClientCall<Q, R> implements Response {
   void _sendRequest(ClientConnection connection, Map<String, String> metadata) {
     try {
       _stream = connection.makeRequest(
-          _method.path, options.timeout, metadata, _onRequestError);
+          _method.path, options.timeout, metadata, _onRequestError,
+          callOptions: options);
     } catch (e) {
       _terminateWithError(GrpcError.unavailable('Error making call: $e'));
       return;

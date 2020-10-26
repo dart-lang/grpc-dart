@@ -169,9 +169,6 @@ class XhrClientConnection extends ClientConnection {
     for (final header in metadata.keys) {
       request.setRequestHeader(header, metadata[header]);
     }
-    request.setRequestHeader('Content-Type', 'application/grpc-web+proto');
-    request.setRequestHeader('X-User-Agent', 'grpc-web-dart/0.1');
-    request.setRequestHeader('X-Grpc-Web', '1');
     // Overriding the mimetype allows us to stream and parse the data
     request.overrideMimeType('text/plain; charset=x-user-defined');
     request.responseType = 'text';

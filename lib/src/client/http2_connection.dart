@@ -308,21 +308,36 @@ class _SocketTransportConnector implements ClientTransportConnector {
   @override
   Future<ClientTransportConnection> connect() async {
     final securityContext = _options.credentials.securityContext;
-    _socket = await Socket.connect(_host, _port);
-    // Don't wait for io buffers to fill up before sending requests.
-    _socket.setOption(SocketOption.tcpNoDelay, true);
-    if (securityContext != null) {
-      // Todo(sigurdm): We want to pass supportedProtocols: ['h2'].
-      // http://dartbug.com/37950
-      _socket = await SecureSocket.secure(_socket,
+    if (securityContext == null) {
+      if (!isInsecureConnectionAllowed(_host)) {
+        throw StateError("Insecure gRPC is not allowed by platform: $_host");
+      }
+      _socket = await Socket.connect(_host, _port);
+    } else {
+      if (_options.credentials.authority == null) {
+        // Todo(sigurdm): We want to pass supportedProtocols: ['h2'].
+        // http://dartbug.com/37950
+        _socket = await SecureSocket.connect(
+          _host,
+          _port,
+          context: securityContext,
+          onBadCertificate: _validateBadCertificate,
+        );
+      } else {
+        _socket = await SecureSocket.secure(
+          await Socket.connect(_host, _port),
           // This is not really the host, but the authority to verify the TLC
           // connection against.
           //
           // We don't use `this.authority` here, as that includes the port.
-          host: _options.credentials.authority ?? _host,
+          host: _options.credentials.authority,
           context: securityContext,
-          onBadCertificate: _validateBadCertificate);
+          onBadCertificate: _validateBadCertificate,
+        );
+      }
     }
+    // Don't wait for io buffers to fill up before sending requests.
+    _socket.setOption(SocketOption.tcpNoDelay, true);
 
     return ClientTransportConnection.viaSocket(_socket);
   }

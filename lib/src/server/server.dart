@@ -174,6 +174,11 @@ class Server extends ConnectionServer {
       socket.setOption(SocketOption.tcpNoDelay, true);
       final connection = ServerTransportConnection.viaSocket(socket,
           settings: http2ServerSettings);
+      if (security != null && !security.validateClient(socket)) {
+        _printSocketError('unable to serve $address:$port - '
+            'unable to validate client socket');
+        return socket.close();
+      }
       serveConnection(connection);
     }, onError: _printSocketError);
   }
