@@ -44,8 +44,7 @@ abstract class Response {
 /// A gRPC response producing a single value.
 class ResponseFuture<R> extends DelegatingFuture<R>
     with _ResponseMixin<dynamic, R> {
-  @override
-  final ClientCall<dynamic, R> _call;
+  final ClientCall _call;
 
   static R _ensureOnlyOneResponse<R>(R? previous, R element) {
     if (previous != null) {
@@ -63,6 +62,45 @@ class ResponseFuture<R> extends DelegatingFuture<R>
       : super(_call.response
             .fold<R?>(null, _ensureOnlyOneResponse)
             .then(_ensureOneResponse));
+
+  ResponseFuture._wrap(Future<R> future, {ClientCall clientCall})
+      : _call = clientCall,
+        super(future);
+
+  /// `clientCall` maybe be lost when converting from Future to ResponseFuture
+  static ResponseFuture<T> wrap<T>(Future<T> future, {ClientCall clientCall}) {
+    return ResponseFuture._wrap(
+      future,
+      clientCall: (_unwrap(future) ?? clientCall),
+    );
+  }
+
+  static ClientCall _unwrap(Future future) =>
+      future is ResponseFuture ? future._call : null;
+
+  @override
+  ResponseFuture<S> then<S>(FutureOr<S> Function(R p1) onValue,
+      {Function onError}) {
+    return wrap(super.then(onValue, onError: onError), clientCall: _call);
+  }
+
+  @override
+  ResponseFuture<R> catchError(Function onError,
+      {bool Function(Object error) test}) {
+    return wrap(super.catchError(onError, test: test), clientCall: _call);
+  }
+
+  @override
+  ResponseFuture<R> whenComplete(FutureOr Function() action) {
+    return wrap(super.whenComplete(action), clientCall: _call);
+  }
+
+  @override
+  ResponseFuture<R> timeout(Duration timeLimit,
+      {FutureOr<R> Function() onTimeout}) {
+    return wrap(super.timeout(timeLimit, onTimeout: onTimeout),
+        clientCall: _call);
+  }
 }
 
 /// A gRPC response producing a stream of values.
@@ -78,7 +116,7 @@ class ResponseStream<R> extends DelegatingStream<R>
 }
 
 abstract class _ResponseMixin<Q, R> implements Response {
-  ClientCall<Q, R> get _call;
+  ClientCall get _call;
 
   @override
   Future<Map<String, String>> get headers => _call.headers;
@@ -87,5 +125,5 @@ abstract class _ResponseMixin<Q, R> implements Response {
   Future<Map<String, String>> get trailers => _call.trailers;
 
   @override
-  Future<void> cancel() => _call.cancel();
+  Future<void> cancel() => _call?.cancel();
 }
