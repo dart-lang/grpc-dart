@@ -63,6 +63,28 @@ class ResponseFuture<R> extends DelegatingFuture<R>
       : super(_call.response
             .fold<R?>(null, _ensureOnlyOneResponse)
             .then(_ensureOneResponse));
+
+  ResponseFuture._next(this._call, Future<R> future) : super(future);
+
+  ResponseFuture<R> responseThen(FutureOr<R> Function(R p1) onValue,
+      {Function? onError}) {
+    return ResponseFuture._next(_call, then(onValue, onError: onError));
+  }
+
+  ResponseFuture<R> responseCatchError(Function onError,
+      {bool Function(Object error)? test}) {
+    return ResponseFuture._next(_call, catchError(onError, test: test));
+  }
+
+  ResponseFuture<R> responseWhenComplete(FutureOr Function() action) {
+    return ResponseFuture._next(_call, whenComplete(action));
+  }
+
+  ResponseFuture<R> responseTimeout(Duration timeLimit,
+      {FutureOr<R> Function()? onTimeout}) {
+    return ResponseFuture._next(
+        _call, timeout(timeLimit, onTimeout: onTimeout));
+  }
 }
 
 /// A gRPC response producing a stream of values.
