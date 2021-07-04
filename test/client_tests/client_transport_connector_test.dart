@@ -254,7 +254,7 @@ void main() {
     await harness.runFailureTest(
       clientCall: harness.client.unary(dummyValue),
       expectedException:
-          GrpcError.custom(customStatusCode, customStatusMessage),
+          GrpcError.custom(customStatusCode, message: customStatusMessage),
       serverHandlers: [handleRequest],
     );
   });

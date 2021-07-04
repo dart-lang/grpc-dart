@@ -155,32 +155,38 @@ class GrpcError implements Exception {
   final int code;
   final String? message;
   final Object? rawResponse;
+  final Map<String, String>? trailers;
   final List<GeneratedMessage>? details;
 
   /// Custom error code.
-  GrpcError.custom(this.code, [this.message, this.details, this.rawResponse]);
+  GrpcError.custom(this.code,
+      {this.message, this.details, this.rawResponse, this.trailers = const {}});
 
   /// The operation completed successfully.
   GrpcError.ok([this.message, this.details, this.rawResponse])
-      : code = StatusCode.ok;
+      : trailers = const {},
+        code = StatusCode.ok;
 
   /// The operation was cancelled (typically by the caller).
   GrpcError.cancelled([this.message, this.details, this.rawResponse])
-      : code = StatusCode.cancelled;
+      : trailers = const {},
+        code = StatusCode.cancelled;
 
   /// Unknown error. An example of where this error may be returned is if a
   /// Status value received from another address space belongs to an error-space
   /// that is not known in this address space. Also errors raised by APIs that
   /// do not return enough error information may be converted to this error.
   GrpcError.unknown([this.message, this.details, this.rawResponse])
-      : code = StatusCode.unknown;
+      : trailers = const {},
+        code = StatusCode.unknown;
 
   /// Client specified an invalid argument. Note that this differs from
   /// [failedPrecondition]. [invalidArgument] indicates arguments that are
   /// problematic regardless of the state of the system (e.g., a malformed file
   /// name).
   GrpcError.invalidArgument([this.message, this.details, this.rawResponse])
-      : code = StatusCode.invalidArgument;
+      : trailers = const {},
+        code = StatusCode.invalidArgument;
 
   /// Deadline expired before operation could complete. For operations that
   /// change the state of the system, this error may be returned even if the
@@ -188,16 +194,19 @@ class GrpcError implements Exception {
   /// from a server could have been delayed long enough for the deadline to
   /// expire.
   GrpcError.deadlineExceeded([this.message, this.details, this.rawResponse])
-      : code = StatusCode.deadlineExceeded;
+      : trailers = const {},
+        code = StatusCode.deadlineExceeded;
 
   /// Some requested entity (e.g., file or directory) was not found.
   GrpcError.notFound([this.message, this.details, this.rawResponse])
-      : code = StatusCode.notFound;
+      : trailers = const {},
+        code = StatusCode.notFound;
 
   /// Some entity that we attempted to create (e.g., file or directory) already
   /// exists.
   GrpcError.alreadyExists([this.message, this.details, this.rawResponse])
-      : code = StatusCode.alreadyExists;
+      : trailers = const {},
+        code = StatusCode.alreadyExists;
 
   /// The caller does not have permission to execute the specified operation.
   /// [permissionDenied] must not be used for rejections caused by exhausting
@@ -205,12 +214,14 @@ class GrpcError implements Exception {
   /// [permissionDenied] must not be used if the caller cannot be identified
   /// (use [unauthenticated] instead for those errors).
   GrpcError.permissionDenied([this.message, this.details, this.rawResponse])
-      : code = StatusCode.permissionDenied;
+      : trailers = const {},
+        code = StatusCode.permissionDenied;
 
   /// Some resource has been exhausted, perhaps a per-user quota, or perhaps the
   /// entire file system is out of space.
   GrpcError.resourceExhausted([this.message, this.details, this.rawResponse])
-      : code = StatusCode.resourceExhausted;
+      : trailers = const {},
+        code = StatusCode.resourceExhausted;
 
   /// Operation was rejected because the system is not in a state required for
   /// the operation's execution. For example, directory to be deleted may be
@@ -227,7 +238,8 @@ class GrpcError implements Exception {
   ///     returned since the client should not retry unless they have first
   ///     fixed up the directory by deleting files from it.
   GrpcError.failedPrecondition([this.message, this.details, this.rawResponse])
-      : code = StatusCode.failedPrecondition;
+      : trailers = const {},
+        code = StatusCode.failedPrecondition;
 
   /// The operation was aborted, typically due to a concurrency issue like
   /// sequencer check failures, transaction aborts, etc.
@@ -235,7 +247,8 @@ class GrpcError implements Exception {
   /// See litmus test above for deciding between [failedPrecondition],
   /// [aborted], and [unavailable].
   GrpcError.aborted([this.message, this.details, this.rawResponse])
-      : code = StatusCode.aborted;
+      : trailers = const {},
+        code = StatusCode.aborted;
 
   /// Operation was attempted past the valid range. E.g., seeking or reading
   /// past end of file.
@@ -251,16 +264,19 @@ class GrpcError implements Exception {
   /// when it applies so that callers who are iterating through a space can
   /// easily look for an [outOfRange] error to detect when they are done.
   GrpcError.outOfRange([this.message, this.details, this.rawResponse])
-      : code = StatusCode.outOfRange;
+      : trailers = const {},
+        code = StatusCode.outOfRange;
 
   /// Operation is not implemented or not supported/enabled in this service.
   GrpcError.unimplemented([this.message, this.details, this.rawResponse])
-      : code = StatusCode.unimplemented;
+      : trailers = const {},
+        code = StatusCode.unimplemented;
 
   /// Internal errors. Means some invariants expected by underlying system has
   /// been broken. If you see one of these errors, something is very broken.
   // TODO(sigurdm): This should probably not be an [Exception].
-  GrpcError.internal([this.message, this.details, this.rawResponse])
+  GrpcError.internal(
+      [this.message, this.details, this.rawResponse, this.trailers])
       : code = StatusCode.internal;
 
   /// The service is currently unavailable.  This is a most likely a transient
@@ -269,16 +285,19 @@ class GrpcError implements Exception {
   /// See litmus test above for deciding between [failedPrecondition],
   /// [aborted], and [unavailable].
   GrpcError.unavailable([this.message, this.details, this.rawResponse])
-      : code = StatusCode.unavailable;
+      : trailers = const {},
+        code = StatusCode.unavailable;
 
   /// Unrecoverable data loss or corruption.
   GrpcError.dataLoss([this.message, this.details, this.rawResponse])
-      : code = StatusCode.dataLoss;
+      : trailers = const {},
+        code = StatusCode.dataLoss;
 
   /// The request does not have valid authentication credentials for the
   /// operation.
   GrpcError.unauthenticated([this.message, this.details, this.rawResponse])
-      : code = StatusCode.unauthenticated;
+      : trailers = const {},
+        code = StatusCode.unauthenticated;
 
   /// Given a status code, return the name
   String get codeName => (Code.valueOf(code) ?? Code.UNKNOWN).name;
@@ -294,7 +313,8 @@ class GrpcError implements Exception {
 
   @override
   String toString() =>
-      'gRPC Error (code: $code, codeName: $codeName, message: $message, details: $details, rawResponse: $rawResponse)';
+      'gRPC Error (code: $code, codeName: $codeName, message: $message, '
+      'details: $details, rawResponse: $rawResponse, trailers: $trailers)';
 }
 
 /// Parse error details `Any` object into the right kind of `GeneratedMessage`.
@@ -375,14 +395,16 @@ void validateHttpStatusAndContentType(
     // and use this information to report a better error to the application
     // layer. However prefer to use status code derived from HTTP status
     // if grpc-status itself does not provide an informative error.
-    final error = grpcErrorFromTrailers(headers);
+    final error = grpcErrorDetailsFromTrailers(headers);
     if (error == null || error.code == StatusCode.unknown) {
       throw GrpcError.custom(
-          status,
-          error?.message ??
-              'HTTP connection completed with ${httpStatus} instead of 200',
-          error?.details,
-          rawResponse);
+        status,
+        message: error?.message ??
+            'HTTP connection completed with ${httpStatus} instead of 200',
+        details: error?.details,
+        rawResponse: rawResponse,
+        trailers: error?.trailers ?? toCustomTrailers(headers),
+      );
     }
     throw error;
   }
@@ -399,7 +421,7 @@ void validateHttpStatusAndContentType(
   }
 }
 
-GrpcError? grpcErrorFromTrailers(Map<String, String> trailers) {
+GrpcError? grpcErrorDetailsFromTrailers(Map<String, String> trailers) {
   final status = trailers['grpc-status'];
   final statusCode = status != null ? int.parse(status) : StatusCode.unknown;
 
@@ -407,14 +429,24 @@ GrpcError? grpcErrorFromTrailers(Map<String, String> trailers) {
     final message = _tryDecodeStatusMessage(trailers['grpc-message']);
     final statusDetails = trailers[_statusDetailsHeader];
     return GrpcError.custom(
-        statusCode,
-        message,
-        statusDetails == null
-            ? const <GeneratedMessage>[]
-            : decodeStatusDetails(statusDetails));
+      statusCode,
+      message: message,
+      trailers: toCustomTrailers(trailers),
+      details: statusDetails == null
+          ? const <GeneratedMessage>[]
+          : decodeStatusDetails(statusDetails),
+    );
   }
 
   return null;
+}
+
+Map<String, String> toCustomTrailers(Map<String, String> trailers) {
+  return Map.from(trailers)
+    ..remove(':status')
+    ..remove('content-type')
+    ..remove('grpc-status')
+    ..remove('grpc-message');
 }
 
 const _statusDetailsHeader = 'grpc-status-details-bin';

@@ -978,7 +978,7 @@ class Tester {
   /// * received status message is the same as the sent message for both
   ///   Procedure steps 1 and 2
   Future<void> statusCodeAndMessage() async {
-    final expectedStatus = GrpcError.custom(2, 'test status message');
+    final expectedStatus = GrpcError.custom(2, message: 'test status message');
     final responseStatus = EchoStatus()
       ..code = expectedStatus.code
       ..message = expectedStatus.message!;

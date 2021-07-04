@@ -49,8 +49,8 @@ class TestService extends TestServiceBase {
   Future<SimpleResponse> unaryCall(
       ServiceCall call, SimpleRequest request) async {
     if (request.responseStatus.code != 0) {
-      throw GrpcError.custom(
-          request.responseStatus.code, request.responseStatus.message);
+      throw GrpcError.custom(request.responseStatus.code,
+          message: request.responseStatus.message);
     }
     final payload = Payload()..body = List.filled(request.responseSize, 0);
     return SimpleResponse()..payload = payload;
@@ -90,8 +90,8 @@ class TestService extends TestServiceBase {
   StreamingOutputCallResponse _responseForRequest(
       StreamingOutputCallRequest request) {
     if (request.responseStatus.code != 0) {
-      throw GrpcError.custom(
-          request.responseStatus.code, request.responseStatus.message);
+      throw GrpcError.custom(request.responseStatus.code,
+          message: request.responseStatus.message);
     }
     final response = StreamingOutputCallResponse();
     if (request.responseParameters.isNotEmpty) {

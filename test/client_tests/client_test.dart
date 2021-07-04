@@ -284,7 +284,7 @@ void main() {
     await harness.runFailureTest(
       clientCall: harness.client.unary(dummyValue),
       expectedException:
-          GrpcError.custom(customStatusCode, customStatusMessage),
+          GrpcError.custom(customStatusCode, message: customStatusMessage),
       serverHandlers: [handleRequest],
     );
   });
@@ -378,7 +378,7 @@ void main() {
     await harness.runFailureTest(
       clientCall: harness.client.unary(dummyValue),
       expectedException:
-          GrpcError.custom(customStatusCode, customStatusMessage),
+          GrpcError.custom(customStatusCode, message: customStatusMessage),
       serverHandlers: [handleRequest],
     );
   });
@@ -598,9 +598,39 @@ void main() {
       clientCall: harness.client.unary(dummyValue),
       expectedException: GrpcError.custom(
         code,
-        message,
-        decodeStatusDetails(details),
+        message: message,
+        details: decodeStatusDetails(details),
       ),
+      serverHandlers: [handleRequest],
+    );
+  });
+
+  test('Call should throw with custom trailers', () async {
+    final code = StatusCode.invalidArgument;
+    final message = 'some custom message';
+    final customKey = 'some-custom-key';
+    final customVal = 'some custom value';
+    final customTrailers = <String, String>{customKey: customVal};
+    void handleRequest(_) {
+      harness.toClient.add(HeadersStreamMessage([
+        Header.ascii(':status', '200'),
+        Header.ascii('content-type', 'application/grpc'),
+        Header.ascii('grpc-status', code.toString()),
+        Header.ascii('grpc-message', message),
+        Header.ascii(customKey, customVal),
+      ], endStream: true));
+      harness.toClient.close();
+    }
+
+    await harness.runFailureTest(
+      clientCall: harness.client.unary(dummyValue),
+      expectedException: GrpcError.custom(
+        code,
+        details: [],
+        message: message,
+        trailers: customTrailers,
+      ),
+      expectedCustomTrailers: customTrailers,
       serverHandlers: [handleRequest],
     );
   });

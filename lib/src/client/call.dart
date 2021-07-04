@@ -339,7 +339,7 @@ class ClientCall<Q, R> implements Response {
 
   /// If there's an error status then process it as a response error.
   void _checkForErrorStatus(Map<String, String> trailers) {
-    final error = grpcErrorFromTrailers(trailers);
+    final error = grpcErrorDetailsFromTrailers(trailers);
     if (error != null) {
       _responseError(error);
     }

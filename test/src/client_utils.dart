@@ -307,13 +307,24 @@ abstract class _Harness {
     await clientSubscription.cancel();
   }
 
-  Future<void> expectThrows(Future? future, dynamic exception) async {
+  Future<void> expectThrows(
+    Future? future,
+    dynamic exception, {
+    Map<String, String>? expectedCustomTrailers,
+  }) async {
     try {
       await future;
       fail('Did not throw');
     } catch (e, st) {
       expect(e, exception);
       expect(st, isNot(equals(StackTrace.current)));
+      if (expectedCustomTrailers != null) {
+        if (e is GrpcError) {
+          expect(e.trailers, expectedCustomTrailers);
+        } else {
+          fail('$e is not a GrpcError');
+        }
+      }
     }
   }
 
@@ -323,10 +334,15 @@ abstract class _Harness {
       String? expectedPath,
       Duration? expectedTimeout,
       Map<String, String>? expectedCustomHeaders,
+      Map<String, String>? expectedCustomTrailers,
       List<MessageHandler> serverHandlers = const [],
       bool expectDone = true}) async {
     return runTest(
-      clientCall: expectThrows(clientCall, expectedException),
+      clientCall: expectThrows(
+        clientCall,
+        expectedException,
+        expectedCustomTrailers: expectedCustomTrailers,
+      ),
       expectedPath: expectedPath,
       expectedTimeout: expectedTimeout,
       expectedCustomHeaders: expectedCustomHeaders,
